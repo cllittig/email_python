@@ -1,0 +1,2 @@
+def SendEmail(EMAIL, PASSWORD, IMAP_SERVER, DESTINATARIO, ASSUNTO, MENSAGEM):
+    print("sim")
