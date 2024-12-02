@@ -1,30 +1,29 @@
-from imapclient import IMAPClient
+import imaplib
+import email
+from email.header import decode_header
 import datetime
 
-IMAP_SERVER = "imap.gmail.com"
-EMAIL = "carlosaugusto98p@gmail.com"
-PASSWORD = "32130708Aa."
-
-CRITERIA = {
-    "before": datetime.date(2024,6,1)
-}
-
-def CleanEmail():
-    with IMAPClient(IMAP_SERVER) as client:
-        client.login(EMAIL, PASSWORD)
-        print("conectado ao servidor")
+def CleanEmail(EMAIL, PASSWORD, IMAP_SERVER):
+    try:
+        mail = imaplib.IMAP4_SSL(IMAP_SERVER)
+        mail.login(EMAIL, PASSWORD)
+        print("Conectado ao servidor IMAP.")
         
-        client.select_folder("INBOX")
+        mail.select("inbox")
         
-        search_criteria =[]
-        if "before" in CRITERIA:
-            search_criteria.append(f"BEFORE {CRITERIA['before'].strftime('%d-%b-%Y')}")
+        date = (datetime.date(2024, 6, 1)).strftime("%d-%b-%Y")
+        status, messages = mail.search(None, f"BEFORE {date}")
         
-        messages = client.search(search_criteria)
+        email_ids = messages[0].split()
+        print(f"{len(email_ids)} emails encontrados para apagar.")
         
-        print(f"{len(messages)} emails encontrados")
+        total = len(email_ids)
+        for email_id in email_ids:
+            mail.store(email_id, "+FLAGS", "\\Deleted")
+            print(f" Email {email_id} de {total} apagado.")
         
-        if messages:
-            client.delete_messages(messages)
-            client.expunge()
-            print("emails deletados")
+        mail.expunge()
+        mail.logout()
+        print("Emails apagados com sucesso.")
+    except Exception as e:
+        print(f"Erro ao limpar emails: {e}")
